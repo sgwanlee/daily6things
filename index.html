@@ -3,6 +3,18 @@
 <head>
 	<title>Daily 6 Things</title>
 	<script src="https://unpkg.com/vue"></script>
+	<!-- google analytics -->
+	<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-83926119-1', 'auto');
+  ga('send', 'pageview');
+
+	</script>
+	<!-- google analytics -->
 	<script type="text/javascript">
 		window.addEventListener('load', function(){
 			Vue.component('todo-item', {
@@ -11,20 +23,16 @@
 			});
 
 
-			//Create a new Vue instance
 			window.app = new Vue({
 
-			  //Bind this Vue instance to our container div with an ID of todo
 			  el: "#app",
 
-			  //This is where we will register the values that hold data for our application
 			  data: {
 			  	newTask: "",
 			  	over: false,
 			  	taskList: []
 			  	},
 			  created: function () {
-			    // `this` points to the vm instance
 			    if(typeof localStorage['daily6things:todoList'] !== 'undefined'){
 		  			this.taskList = JSON.parse(localStorage.getItem('daily6things:todoList'));
 		  		}
@@ -41,8 +49,6 @@
 			  		});
 			  	}
 			  },
-
-			  //This is where we will hold the methods we want to use in our application
 			  methods: {
 			  	addTask: function(e){
 			  		var task = this.newTask.trim();
@@ -153,7 +159,6 @@
 		<div>
 			<h3>What're your most important 6 things today?</h3>
 			<input type='text' v-model="newTask" @keyup.enter="addTask" autofocus class="text-input">
-			<!-- Unorderd list for holding our todo items -->
 		</div>
 		<div>
 			<h6>TODO LIST</h6>
