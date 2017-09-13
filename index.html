@@ -68,6 +68,8 @@
 			  			this.newTask = "";
 
 			  			this.updateLocalStorage();
+
+			  			ga('send', 'event', 'task', 'add', '');
 			  		}
 			  	},
 			  	changeStatus: function(task){
