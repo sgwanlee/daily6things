@@ -171,7 +171,9 @@
 		  		}
 		  		// restore trello integration infos
 		  		if(typeof localStorage['daily6things:trello_idList'] !== 'undefined'){
-		  			this.trelloAuthentication();
+		  			if(typeof localStorage['trello_token'] === 'undefined'){
+		  				this.trelloAuthentication();
+		  			}
 		  			idList = localStorage['daily6things:trello_idList']
 		  			nameList = localStorage['daily6things:trello_nameList']
 		  			nameBoard = localStorage['daily6things:trello_nameBoard']
