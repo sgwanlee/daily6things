@@ -104,7 +104,13 @@
 
 			Vue.component('trello-board', {
 				props : ['board'],
-				template: '<a href="#" v-on:click.prevent="selectBoard(board)"><li><small>{{board.name}}</small></li></a>',
+				template: `<a href="#" v-on:click.prevent="selectBoard(board)">
+										<li>
+											<small>
+											{{board.name}}
+											</small>
+										</li>
+										</a>`,
 				methods: {
 					selectBoard: function(board){
 						IdBoard = board.id
@@ -140,7 +146,11 @@
 
 			Vue.component('trello-list', {
 				props : ['list'],
-				template: '<a href="#" v-on:click.prevent="selectList(list)"><li><small>{{list.name}}</small></li></a>',
+				template: `<a href="#" v-on:click.prevent="selectList(list)">
+										<li>
+											<small>{{list.name}}</small>
+										</li>
+									</a>`,
 				methods : {
 					selectList: function(list){
 						IdList =  list.id;
@@ -416,7 +426,7 @@
 			<div>
 				<a href='#' class="trello_integration" v-on:click.prevent="authenticationTrello">
 				<small v-if="trello_infos == ''">Trello Integration</small>
-				<small else>Trello Integration (Retry)</small>
+				<small v-else>Trello Integration (Retry)</small>
 				</a>
 				
 				<ul v-if="trello_boards.length != 0" class='trello_boards'>
