@@ -141,7 +141,8 @@
 
 						this.$parent.trello_infos = {
 							nameList: nameList,
-							nameBoard: nameBoard
+							nameBoard: nameBoard,
+							idList: idList
 						};
 
 						localStorage.setItem('daily6things:trello_idList', idList);
@@ -170,7 +171,7 @@
 		  		}
 		  		// restore trello integration infos
 		  		if(typeof localStorage['daily6things:trello_idList'] !== 'undefined'){
-		  			trelloAuthentication();
+		  			this.trelloAuthentication();
 		  			idList = localStorage['daily6things:trello_idList']
 		  			nameList = localStorage['daily6things:trello_nameList']
 		  			nameBoard = localStorage['daily6things:trello_nameBoard']
