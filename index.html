@@ -27,10 +27,10 @@
 
 		// global variables
 		var boards = [];
-		var IdBoard = null;
+		var idBoard = null;
 		var nameList ='';
 		var nameBoard = '';
-		var IdList = null;
+		var idList = null;
 		var test = null;
 
 
@@ -92,14 +92,14 @@
 										</a>`,
 				methods: {
 					selectBoard: function(board){
-						IdBoard = board.id
+						idBoard = board.id
 						nameBoard = board.name
-						// console.log(IdBoard);
+						// console.log(idBoard);
 						// console.log(nameBoard);
 						
 						// this.$parent.trello_boards = [];
 
-						this.trelloGetList(IdBoard);
+						this.trelloGetList(idBoard);
 					},
 					trelloGetList: function(board_id){
 						window.Trello.get('/boards/'+board_id+'/lists', this.SuccessLists);
@@ -132,7 +132,7 @@
 									</a>`,
 				methods : {
 					selectList: function(list){
-						IdList =  list.id;
+						idList =  list.id;
 						nameList = list.name;
 						// console.log(list.id);
 						// console.log(name);
@@ -144,7 +144,7 @@
 							nameBoard: nameBoard
 						};
 
-						localStorage.setItem('daily6things:trello_idList', IdList);
+						localStorage.setItem('daily6things:trello_idList', idList);
 		  			localStorage.setItem('daily6things:trello_nameList',nameList);
 		  			localStorage.setItem('daily6things:trello_nameBoard', nameBoard);
 					},
