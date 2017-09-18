@@ -2,7 +2,11 @@
 <html>
 <head>
 	<title>Daily 6 Things</title>
+	<!-- vue.js -->
 	<script src="https://unpkg.com/vue"></script>
+	<!-- bootstrap -->
+	<!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous"> -->
+
 	<!-- google analytics -->
 	<script>
   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
@@ -15,13 +19,148 @@
 
 	</script>
 	<!-- google analytics -->
+
+	<script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+	<script src="https://api.trello.com/1/client.js?key=d5721c038fc733870a6da962afaf2b3b"></script>
+
 	<script type="text/javascript">
+
+		// global variables
+		var boards = [];
+		var IdBoard = null;
+		var nameList ='';
+		var nameBoard = '';
+		var IdList = null;
+		var test = null;
+
+		var authenticationSuccess = function() {
+		  // console.log('Successful authentication');
+		};
+
+		var authenticationFailure = function() {
+		  // console.log('Failed authentication');
+		};
+
+		var trelloAuthentication = function() {
+			window.Trello.authorize({
+			  type: 'popup',
+			  name: 'Daily6Things',
+			  scope: {
+			    read: 'true',
+			    write: 'true' },
+			  expiration: 'never',
+			  success: authenticationSuccess,
+			  error: authenticationFailure
+			});
+		};
+
+
 		window.addEventListener('load', function(){
-			Vue.component('todo-item', {
-				props: ['todo'],
-			  template: '<li><input type="checkbox" id="todo"><label for="todo">{{ todo.text }}</label></li>'
+			
+			Vue.component('item', {
+				props: ['task'],
+			  template: `<li v-bind:class="{ checked: task.done == true }">
+			  						<label>
+			  							<input type="checkbox" class="checkbox" v-on:click.prevent="changeStatus(task)">
+			  							{{ task.text }}
+		  							</label>
+		  							<button class='remove_element btn btn-sm btn-light' v-on:click="removeTodoList(task)">삭제</button>
+	  							</li>`,
+	  		methods: {
+	  			changeStatus: function(task){
+			  		
+			  		if (task.done == true){
+			  			task.done = false;
+			  		}else {
+			  			task.done = true;
+			  		}
+			  		window.Trello.put('/cards/'+task.idCard+'?closed='+task.done, this.cardUpdateSuccess);
+			  		
+			  		// update local storage
+			  		this.$parent.updateLocalStorage();
+			  		
+			  		if (this.$parent.doneList.length < 6) {
+			  			this.$parent.over = false;
+			  		}
+			  	},
+			  	removeTodoList: function(task) {
+			  		var index = this.$parent.taskList.indexOf(task);
+			  		this.$parent.taskList.splice(index,1);
+			  		this.$parent.updateLocalStorage();
+
+			  		// console.log("A");
+			  		window.Trello.delete('/cards/'+ task.idCard, this.cardDeleteSuccess);
+			  	},
+			  	cardDeleteSuccess: function(data){
+						// console.log('Card deleted successfully.');
+						// console.log(data);
+					},
+					cardUpdateSuccess: function(data){
+						// console.log('Card updated successfully.');
+						// console.log(data);
+					},
+	  		}
 			});
 
+			Vue.component('trello-board', {
+				props : ['board'],
+				template: '<a href="#" v-on:click.prevent="selectBoard(board)"><li><small>{{board.name}}</small></li></a>',
+				methods: {
+					selectBoard: function(board){
+						IdBoard = board.id
+						nameBoard = board.name
+						// console.log(IdBoard);
+						// console.log(nameBoard);
+						
+						// this.$parent.trello_boards = [];
+
+						this.trelloGetList(IdBoard);
+					},
+					trelloGetList: function(board_id){
+						window.Trello.get('/boards/'+board_id+'/lists', this.SuccessLists);
+					},
+					SuccessLists: function (data) {
+						// console.log(data);
+						lists = data
+
+						for(var i = 0, len=lists.length; i < len; i++){
+							if(lists[i]['closed'] == false){
+
+								this.$parent.trello_lists.push({
+									name: lists[i]['name'],
+									id: lists[i]['id']
+								});
+							}
+						}
+
+						// console.log(this.$parent.trello_lists);
+					},
+				}
+			});
+
+			Vue.component('trello-list', {
+				props : ['list'],
+				template: '<a href="#" v-on:click.prevent="selectList(list)"><li><small>{{list.name}}</small></li></a>',
+				methods : {
+					selectList: function(list){
+						IdList =  list.id;
+						nameList = list.name;
+						// console.log(list.id);
+						// console.log(name);
+						this.$parent.trello_boards = [];
+						this.$parent.trello_lists = [];
+
+						this.$parent.trello_infos = {
+							nameList: nameList,
+							nameBoard: nameBoard
+						};
+
+						localStorage.setItem('daily6things:trello_idList', IdList);
+		  			localStorage.setItem('daily6things:trello_nameList',nameList);
+		  			localStorage.setItem('daily6things:trello_nameBoard', nameBoard);
+					},
+				}
+			});
 
 			window.app = new Vue({
 
@@ -30,12 +169,30 @@
 			  data: {
 			  	newTask: "",
 			  	over: false,
-			  	taskList: []
+			  	taskList: [],
+			  	trello_boards: [],
+			  	trello_lists: [],
+			  	trello_infos: "",
 			  	},
 			  created: function () {
+			  	// restore data
 			    if(typeof localStorage['daily6things:todoList'] !== 'undefined'){
 		  			this.taskList = JSON.parse(localStorage.getItem('daily6things:todoList'));
 		  		}
+		  		// restore trello integration infos
+		  		if(typeof localStorage['daily6things:trello_idList'] !== 'undefined'){
+		  			trelloAuthentication();
+		  			idList = localStorage['daily6things:trello_idList']
+		  			nameList = localStorage['daily6things:trello_nameList']
+		  			nameBoard = localStorage['daily6things:trello_nameBoard']
+
+		  			this.trello_infos = {
+							nameList: nameList,
+							nameBoard: nameBoard,
+							idList: idList
+						};
+		  		}
+
 			  },
 			  computed: {
 			  	todoList: function(){
@@ -51,57 +208,96 @@
 			  },
 			  methods: {
 			  	addTask: function(e){
-			  		var task = this.newTask.trim();
-			  		if(task) {
-			  			if(this.todoList.length == 6) {
-			  				this.over = true;
-			  				return;
-			  			} else {
-			  				this.over = false;
-			  			}
+			  		if(this.todoList.length == 6) {
+		  				this.over = true;
+		  				return;
+		  			} else {
+		  				this.over = false;
+		  			}
 
-			  			this.taskList.push({
+			  		var task = this.newTask.trim();
+			  		this.newTask = "";
+
+			  		if(task) {
+
+							// console.log(newCard);
+
+							this.taskList.push({
 			  				text: task,
 			  				done: false
 			  			});
 
-			  			this.newTask = "";
+			  			var newCard = {
+							  name: task,
+							  idList: idList,
+							  pos: 'top'
+							};
+
+							var index = this.taskList.length-1;
+							window.Trello.post('/cards/', newCard, this.cardCreationSuccess(index));
 
 			  			this.updateLocalStorage();
 
 			  			ga('send', 'event', 'task', 'add', '');
 			  		}
 			  	},
-			  	changeStatus: function(task){
-			  		var index = this.taskList.indexOf(task);
-			  		if (this.taskList[index].done == true){
-			  			this.taskList[index].done = false;
-			  		}else {
-			  			this.taskList[index].done = true;
-			  		}
-			  		
-			  		// update local storage
-			  		this.updateLocalStorage();
-			  		
-			  		if (this.doneList.length < 6) {
-			  			this.over = false;
-			  		}
-			  	},
 			  	checkboxId: function(index) {
 			  		return "checkbox" + index.toString();
 			  	},
-			  	removeTodoList: function(task) {
-			  		var index = this.taskList.indexOf(task);
-			  		this.taskList.splice(index,1);
+			  	clearDoneList: function(){
+			  		var doneList = this.doneList;
+			  		this.taskList = this.todoList;
+
+			  		for(var i = 0, len = doneList.length; i < len; i++){
+			  			var task = doneList[i]
+			  			window.Trello.delete('/cards/'+ task.idCard, this.cardDeleteSuccess);
+			  		}
 			  		this.updateLocalStorage();
 			  	},
-			  	clearDoneList: function(){
-			  		this.taskList = this.todoList;
-			  		this.updateLocalStorage();
+			  	cardDeleteSuccess: function(data){
+			  		// console.log('Card updated successfully');
+			  		// console.log(data);
 			  	},
 			  	updateLocalStorage: function(){
 			  		localStorage.setItem('daily6things:todoList', JSON.stringify(this.taskList));
-			  	}
+			  	},
+			  	authenticationTrello: function(){
+			  		trelloAuthentication();
+						this.trelloGetBoardList();
+			  	},
+			  	trelloGetBoardList: function(){
+						window.Trello.get('/members/me/boards', this.successBoards);
+					},
+					successBoards: function(data){
+						// console.log(data);
+						boards = data
+
+						for(var i = 0, len=boards.length; i < len; i++){
+							if(boards[i]['closed'] == false){
+
+								this.trello_boards.push({
+									name: boards[i]['name'],
+									id: boards[i]['id']
+								});
+							}
+						}
+					},
+					cardCreationSuccess: function(index) {
+						// console.log("index : " + index);
+						var taskList = this.taskList
+				    return function(data, textStatus, jqXHR) {
+				    	// console.log('Card created successfully.');
+						  var idCard = data['id'];
+						  // console.log(index);
+						  taskList[index].idCard = idCard;
+				    };
+					},
+					closeBoard: function(){
+						this.trello_boards = [];
+					},
+					closeList: function(){
+						this.trello_lists = [];
+					},
 			  }
 			});
 
@@ -137,6 +333,9 @@
 	    height: 100%;
 	    color: #fff;
 		}
+		.list {
+			padding-left: 20px;
+		}
 		.list li {
 			padding: 5px 0;
 		}
@@ -154,42 +353,95 @@
 			bottom: 10px;
 			margin: 10px;
 		}
+		.trello_boards, .trello_lists {
+			position: fixed;
+			bottom: 0;
+			background: white;
+			color: black;
+	    left: 0;
+	    right: 0;
+	    bottom: 0;
+	    margin: 0;
+	    padding: 20px;
+      min-height: 200px;
+		}
+		.trello_lists {
+			background-color: #eee;
+		}
+		.displaynone {
+			display: none;
+		}
+		.trello_integration {
+			color: white;
+		}
+		/*bootstrap*/
+		.row {
+			margin: 30px -15px
+		}
 	</style>
 </head>
 <body>
 	<div class='container' id='app'>
-		<div>
+		<div class='row'>
 			<h3>What're your most important 6 things today?</h3>
 			<input type='text' v-model="newTask" @keyup.enter="addTask" autofocus class="text-input">
+			<p v-bind:class="{displaynone: over === false}">You've had already 6 todos.</p>
 		</div>
-		<div>
-			<h6>TODO LIST</h6>
-		  <ul class="list">
-		    <li v-for='task in todoList' v-bind:class="{ checked: task.done == true }" >
-					<label>		    
-			      <input type="checkbox" class="checkbox" v-on:click.prevent="changeStatus(task)">
-			      {{ task.text }}
-		      </label>
-		      <button class='remove_element' v-on:click="removeTodoList(task)">삭제</button>
-		    </li>
-		  </ul>
-		  <p v-bind:class="{displaynone: over === false}">You've had already 6 todos.</p>
+		<div class='row'>
+			<div class='col'>
+				<h6>TODO LIST</h6>
+
+				<ul class='list'>
+					<item
+						v-for='task in todoList'
+						v-bind:task='task'
+						v-bind:key='task.id'>
+					</item>
+				</ul>
+		  </div>
+			<div class='col'>
+				<h6>DONE LIST</h6><button v-on:click="clearDoneList()">clear done list</button>
+
+				<ul class='list'>
+					<item
+						v-for='task in doneList'
+						v-bind:task='task'
+						v-bind:key='task.id'>
+					</item>
+				</ul>
+			</div>
 		</div>
-		<div>
-			<h6>DONE LIST</h6><button v-on:click="clearDoneList()">clear list</button>
-			<ul class="list">
-		    <li v-for='task in doneList' v-bind:class="{ checked: task.done == true }">
-		    	<label>
-		      	<input type="checkbox" class="checkbox" v-on:click.prevent="changeStatus(task)">
-		      	{{ task.text }}
-	      	</label>
-		    </li>
-		  </ul>
-		</div>
+		<footer>
+			<small>Your data are stored in your browser so it's ok to close this site.</small>
+			<div>
+				<a href='#' class="trello_integration" v-on:click.prevent="authenticationTrello">
+				<small v-if="trello_infos == ''">Trello Integration</small>
+				<small else>Trello Integration (Retry)</small>
+				</a>
+				
+				<ul v-if="trello_boards.length != 0" class='trello_boards'>
+					My Boards
+					<button v-on:click="closeBoard()">닫기</button>
+					<trello-board
+						v-for='board in trello_boards'
+						v-bind:board='board'
+						v-bind:key='board.id'>
+					</trello-board>
+				</ul>
+				<ul v-if="trello_lists.length != 0" class='trello_lists'>
+					My Lists
+					<button v-on:click="closeList()">닫기</button>
+					
+					<trello-list
+						v-for='list in trello_lists'
+						v-bind:list='list'
+						v-bind:key='list.id'>
+					</trello-list>
+				</ul>
+			</div>
+			<small v-bind=trello_infos v-bind:class="{displaynone: trello_infos == '' }">Trello integration infos : Your tasks are stored in {{trello_infos.nameList}} of {{trello_infos.nameBoard}}</small>
+		</footer>
 	</div>
-	<footer>
-		<small>Your data are stored in your browser so it's ok to close this site.</small>
-	</footer>
 </body>
 </html>
 
