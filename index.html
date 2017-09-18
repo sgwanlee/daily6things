@@ -33,27 +33,6 @@
 		var IdList = null;
 		var test = null;
 
-		var authenticationSuccess = function() {
-		  // console.log('Successful authentication');
-		};
-
-		var authenticationFailure = function() {
-		  // console.log('Failed authentication');
-		};
-
-		var trelloAuthentication = function() {
-			window.Trello.authorize({
-			  type: 'popup',
-			  name: 'Daily6Things',
-			  scope: {
-			    read: 'true',
-			    write: 'true' },
-			  expiration: 'never',
-			  success: authenticationSuccess,
-			  error: authenticationFailure
-			});
-		};
-
 
 		window.addEventListener('load', function(){
 			
@@ -272,9 +251,27 @@
 			  		localStorage.setItem('daily6things:todoList', JSON.stringify(this.taskList));
 			  	},
 			  	authenticationTrello: function(){
-			  		trelloAuthentication();
-						this.trelloGetBoardList();
+			  		this.trelloAuthentication();
 			  	},
+			  	authenticationSuccess: function() {
+						this.trelloGetBoardList();
+					  // console.log('Successful authentication');
+					},
+					authenticationFailure: function() {
+					  // console.log('Failed authentication');
+					},
+					trelloAuthentication: function() {
+						window.Trello.authorize({
+						  type: 'popup',
+						  name: 'Daily6Things',
+						  scope: {
+						    read: 'true',
+						    write: 'true' },
+						  expiration: 'never',
+						  success: this.authenticationSuccess,
+						  error: this.authenticationFailure
+						});
+					},
 			  	trelloGetBoardList: function(){
 						window.Trello.get('/members/me/boards', this.successBoards);
 					},
@@ -424,7 +421,7 @@
 		<footer>
 			<small>Your data are stored in your browser so it's ok to close this site.</small>
 			<div>
-				<a href='#' class="trello_integration" v-on:click.prevent="authenticationTrello">
+				<a href='#' class="trello_integration" v-on:click.prevent="authenticationTrello()">
 				<small v-if="trello_infos == ''">Trello Integration</small>
 				<small v-else>Trello Integration (Retry)</small>
 				</a>
