@@ -44,6 +44,7 @@
 			  							{{ task.text }}
 		  							</label>
 		  							<button class='remove_element btn btn-sm btn-light' v-on:click="removeTodoList(task)">삭제</button>
+		  							<label v-if="task.idList != ''" class="trello-label"><small>saved in Trello</small></label>
 	  							</li>`,
 	  		methods: {
 	  			changeStatus: function(task){
@@ -387,6 +388,10 @@
 		/*bootstrap*/
 		.row {
 			margin: 30px -15px
+		}
+		.trello-label {
+			color: #0061C2;
+			padding-left: 10px;
 		}
 	</style>
 </head>
