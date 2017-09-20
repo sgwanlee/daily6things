@@ -50,18 +50,24 @@
 	  			changeStatus: function(task){
 			  		
 			  		if (task.done == true){
+			  			// return when already have 6 items
+			  			if (this.$parent.todoList.length == 6) {
+			  				this.$parent.over = true;
+			  				return;
+			  			} else {
+			  				this.$parent.over = false;
+			  			}
+
 			  			task.done = false;
 			  		}else {
 			  			task.done = true;
 			  		}
+			  		ga('send', 'event', 'task', 'done', task.done.toString());
 			  		window.Trello.put('/cards/'+task.idCard+'?closed='+task.done, this.cardUpdateSuccess);
 			  		
 			  		// update local storage
 			  		this.$parent.updateLocalStorage();
 			  		
-			  		if (this.$parent.doneList.length < 6) {
-			  			this.$parent.over = false;
-			  		}
 			  	},
 			  	removeTodoList: function(task) {
 			  		var index = this.$parent.taskList.indexOf(task);
@@ -202,11 +208,11 @@
 			  methods: {
 			  	addTask: function(e){
 			  		if(this.todoList.length == 6) {
-		  				this.over = true;
-		  				return;
-		  			} else {
-		  				this.over = false;
-		  			}
+	  					this.over = true;
+	  					return;
+	  				} else {
+	  					this.over = false;
+	  				}
 
 			  		var task = this.newTask.trim();
 			  		this.newTask = "";
@@ -316,6 +322,9 @@
 		});
 	</script>
 	<style type="text/css">
+		h6 {
+			display: inline-block;
+		}
 		a {
 			color: white;
 		}
@@ -423,7 +432,7 @@
 				</ul>
 		  </div>
 			<div class='col'>
-				<h6>DONE LIST</h6><button v-on:click="clearDoneList()">clear done list</button>
+				<h6>DONE LIST</h6><button class='btn_clear_list' v-on:click="clearDoneList()">clear done list</button>
 
 				<ul class='list'>
 					<item
