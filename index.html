@@ -316,6 +316,9 @@
 		});
 	</script>
 	<style type="text/css">
+		a {
+			color: white;
+		}
 		ul {
 			list-style-type: none;
 		}
@@ -393,6 +396,11 @@
 			color: #0061C2;
 			padding-left: 10px;
 		}
+		.right {
+			position: fixed;
+			right: 20px;
+			bottom: 20px;
+		}
 	</style>
 </head>
 <body>
@@ -456,6 +464,13 @@
 			</div>
 			<small v-bind=trello_infos v-bind:class="{displaynone: trello_infos == '' }">Trello integration infos : Your tasks are stored in {{trello_infos.nameList}} of {{trello_infos.nameBoard}}</small>
 		</footer>
+	</div>
+	<div class='right'>
+		<a href="https://trello.com/b/nJEnhqxh/daily6things-public" target='_blank' onclick="ga('send', 'event', 'click', 'bug_report', '');">
+			<small>
+				bug report / new feature request
+			</small>
+		</a>
 	</div>
 </body>
 </html>
